@@ -1,0 +1,17 @@
+{
+  "name": "agentctl",
+  "short_name": "agentctl",
+  "description": "The open-source control plane for AI agent environments.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3efe5",
+  "theme_color": "#171714",
+  "icons": [
+    {
+      "src": "/assets/mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "apiKey": "fixture-secret-must-never-appear",
+  "hooks": {
+    "PreToolUse": []
+  },
+  "mcpServers": {
+    "example": {
+      "command": "example"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+# Gemini fixture guidance

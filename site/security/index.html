@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171714">
+    <meta name="description" content="The agentctl v0.1 trust boundary, threat model, installer behavior, and vulnerability reporting process.">
+    <link rel="canonical" href="https://agentctl.justrepl.com/security/">
+    <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <title>Security — agentctl</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav-shell">
+        <a class="brand" href="/" aria-label="agentctl home"><img src="/assets/mark.svg" width="32" height="32" alt=""><span>agentctl</span></a>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/docs/">Docs</a>
+          <a aria-current="page" href="/security/">Security</a>
+          <a href="https://github.com/lstan44/agentctl">GitHub</a>
+          <a class="nav-origin" href="https://justrepl.com">by justREPL</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="security-page">
+      <header class="security-hero shell">
+        <p class="eyebrow eyebrow-inverse">Security model · v0.1</p>
+        <h1>Trust is a behavior,<br>not a badge.</h1>
+        <p>agentctl begins with the narrowest useful authority: read known configuration roots, report evidence locally, and change nothing.</p>
+      </header>
+      <section class="security-body shell">
+        <div class="security-summary">
+          <article><span>01</span><h2>No execution</h2><p>Inspection never invokes target CLIs, skills, scripts, hooks, MCP servers, or plugins.</p></article>
+          <article><span>02</span><h2>No writes</h2><p><code>inspect</code> and <code>doctor</code> never alter agent roots, project files, or shell configuration.</p></article>
+          <article><span>03</span><h2>No exfiltration</h2><p>The CLI has no telemetry or upload path. Potential secret values are excluded from report objects.</p></article>
+        </div>
+
+        <div class="security-prose">
+          <section>
+            <p class="docs-step">Inspected assets</p>
+            <h2>What the inspector reads</h2>
+            <p>Known global configuration roots for supported targets, selected top-level configuration files, <code>SKILL.md</code> content for hashing, and regular file metadata under skill <code>scripts/</code> directories.</p>
+            <p>Symbolic links are not traversed during recursive resource walks. Configuration files larger than 2 MiB are skipped and marked in the report.</p>
+          </section>
+          <section>
+            <p class="docs-step">Secret boundary</p>
+            <h2>Keys may be reported. Values may not.</h2>
+            <p>The inspector searches configuration lines for credential-like key names such as API keys, access tokens, authorization fields, client secrets, passwords, and private keys. It records the key name and line number only.</p>
+            <div class="evidence-block">
+              <p><span>reported</span> <code>authorization_token · config.toml:14</code></p>
+              <p><span>excluded</span> <code>the value after =</code></p>
+            </div>
+          </section>
+          <section>
+            <p class="docs-step">Installer</p>
+            <h2>Versioned, verified, no sudo</h2>
+            <p>The public installer downloads a versioned archive and its SHA-256 file from the GitHub release, verifies the archive, installs into a staged version directory, then atomically changes the active symlink. It does not edit your PATH or shell files.</p>
+            <p>A checksum from the same release channel detects corruption but is not an independent signature. Signed build provenance is a v1 release gate.</p>
+            <p><a class="text-link" href="/install.sh">Read the complete installer <span aria-hidden="true">→</span></a></p>
+          </section>
+          <section>
+            <p class="docs-step">Mutation boundary</p>
+            <h2>Writes require a different command.</h2>
+            <p><code>agentctl init</code> is explicit and separate from inspection. It writes only to a newly selected or empty directory and refuses to overwrite existing files. Later reconcile operations will require content-addressed plans, ownership records, staging, atomic replacement, and tested rollback before release.</p>
+          </section>
+          <section>
+            <p class="docs-step">Disclosure</p>
+            <h2>Report vulnerabilities privately.</h2>
+            <p>Use <a href="https://github.com/lstan44/agentctl/security/advisories/new">GitHub private vulnerability reporting</a> for findings involving secret exposure, execution, path escape, configuration corruption, installer compromise, or release integrity.</p>
+            <p>Do not place exploit details or real configuration in a public issue.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer compact-footer">
+      <div class="shell footer-grid">
+        <p>agentctl is developed by <a href="https://justrepl.com">justREPL</a>.</p>
+        <nav aria-label="Footer navigation"><a href="/">Home</a><a href="/docs/">Docs</a><a href="https://github.com/lstan44/agentctl">GitHub</a></nav>
+      </div>
+    </footer>
+  </body>
+</html>

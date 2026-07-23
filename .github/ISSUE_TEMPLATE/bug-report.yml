@@ -1,0 +1,48 @@
+name: Bug report
+description: Report reproducible incorrect or unsafe behavior.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, private configuration, or unredacted home-directory data.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Observed behavior
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Provide the smallest sanitized steps or fixture that reproduces the issue.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: agentctl version
+      placeholder: agentctl 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: Operating system and Node.js version.
+    validations:
+      required: true
+  - type: dropdown
+    id: mutation
+    attributes:
+      label: Did any file change unexpectedly?
+      options:
+        - "No"
+        - "Yes"
+        - "Unknown"
+    validations:
+      required: true

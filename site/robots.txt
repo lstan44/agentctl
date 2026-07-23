@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://agentctl.justrepl.com/sitemap.xml

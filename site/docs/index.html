@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171714">
+    <meta name="description" content="Install agentctl and run your first read-only agent environment inspection.">
+    <link rel="canonical" href="https://agentctl.justrepl.com/docs/">
+    <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <title>Documentation — agentctl</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav-shell">
+        <a class="brand" href="/" aria-label="agentctl home">
+          <img src="/assets/mark.svg" width="32" height="32" alt="">
+          <span>agentctl</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a aria-current="page" href="/docs/">Docs</a>
+          <a href="/security/">Security</a>
+          <a href="https://github.com/lstan44/agentctl">GitHub</a>
+          <a class="nav-origin" href="https://justrepl.com">by justREPL</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="docs-shell shell">
+      <aside class="docs-nav" aria-label="Documentation sections">
+        <p>Documentation</p>
+        <nav>
+          <a href="#install">Install</a>
+          <a href="#inspect">Inspect</a>
+          <a href="#read-report">Read the report</a>
+          <a href="#json">JSON and CI</a>
+          <a href="#doctor">Doctor</a>
+          <a href="#init">Initialize</a>
+          <a href="#uninstall">Uninstall</a>
+          <a href="#boundaries">v0.1 boundaries</a>
+        </nav>
+      </aside>
+      <article class="docs-content">
+        <header class="docs-hero">
+          <p class="eyebrow">Get started</p>
+          <h1>Inspect before you manage.</h1>
+          <p>From install to a complete local report in about one minute. The first two commands are read-only.</p>
+        </header>
+
+        <section id="install">
+          <p class="docs-step">01 / Install</p>
+          <h2>Install agentctl</h2>
+          <p>The installer supports macOS and Linux, requires Node.js 20 or newer, installs without <code>sudo</code>, and verifies the downloaded release checksum.</p>
+          <div class="docs-command" data-copy-scope>
+            <code data-copy-value>curl -fsSL https://agentctl.justrepl.com/install.sh | bash</code>
+            <button type="button" data-copy-button aria-describedby="docs-copy-status"><span data-copy-label>Copy</span></button>
+          </div>
+          <p id="docs-copy-status" class="copy-status" data-copy-status aria-live="polite">Review the <a href="/install.sh">installer source</a> before running it.</p>
+          <div class="callout">
+            <strong>PATH recovery</strong>
+            <p>If <code>~/.local/bin</code> is not on your PATH, the installer prints the exact export line to add. It does not edit shell startup files.</p>
+          </div>
+        </section>
+
+        <section id="inspect">
+          <p class="docs-step">02 / Observe</p>
+          <h2>Run a read-only inspection</h2>
+          <pre><code>agentctl inspect</code></pre>
+          <p>agentctl reads known configuration roots, hashes <code>SKILL.md</code> definitions, inventories skill script directories, and inspects configuration key names. It does not execute any target CLI, plugin, hook, skill, or script.</p>
+          <h3>Inspect one target</h3>
+          <pre><code>agentctl inspect --target codex
+agentctl inspect --target claude</code></pre>
+          <h3>Inspect a fixture or alternate home</h3>
+          <pre><code>agentctl inspect --home /path/to/home</code></pre>
+        </section>
+
+        <section id="read-report">
+          <p class="docs-step">03 / Interpret</p>
+          <h2>Read the report</h2>
+          <dl class="definition-ledger">
+            <div><dt>Inventory</dt><dd>Detected roots and counts for skills, agents, commands, rules, guidance, config files, scripts, hooks, and MCP surfaces.</dd></div>
+            <div><dt>Duplicate group</dt><dd>Two or more skills with the same SHA-256 digest for their <code>SKILL.md</code> content.</dd></div>
+            <div><dt>Divergent name</dt><dd>The same skill directory name resolves to different <code>SKILL.md</code> digests across targets.</dd></div>
+            <div><dt>Potential secret field</dt><dd>A key name resembles a credential-bearing field. Only the key and line number enter the report; the value does not.</dd></div>
+            <div><dt>Script surface</dt><dd>A regular file exists under a skill's <code>scripts/</code> directory. Presence is not proof that it ran.</dd></div>
+          </dl>
+        </section>
+
+        <section id="json">
+          <p class="docs-step">04 / Automate</p>
+          <h2>Use stable JSON</h2>
+          <pre><code>agentctl inspect --json &gt; agent-environment-report.json</code></pre>
+          <p>JSON output contains no ANSI formatting and is versioned as <code>agentctl.inspect/v1alpha1</code>. The schema is published in the repository.</p>
+          <h3>Fail a policy check on potential secrets</h3>
+          <pre><code>agentctl inspect --strict --json</code></pre>
+          <p><code>--strict</code> exits with status <code>5</code> when potential secret-bearing fields are found. A successful inspection with ordinary informational findings exits <code>0</code>.</p>
+        </section>
+
+        <section id="doctor">
+          <p class="docs-step">05 / Diagnose</p>
+          <h2>Check the local runtime</h2>
+          <pre><code>agentctl doctor
+agentctl doctor --json</code></pre>
+          <p>Doctor checks the Node.js version, platform, home readability, Git availability, and target roots. It remains read-only.</p>
+        </section>
+
+        <section id="init">
+          <p class="docs-step">06 / Opt in</p>
+          <h2>Initialize canonical source</h2>
+          <pre><code>agentctl init ./my-agent-environment --dry-run
+agentctl init ./my-agent-environment</code></pre>
+          <p><code>init</code> is an explicit write command. It creates a new Agent Environment as Code repository and refuses to overwrite a non-empty directory. Target-native rendering is not part of v0.1.</p>
+        </section>
+
+        <section id="uninstall">
+          <p class="docs-step">07 / Recover</p>
+          <h2>Uninstall cleanly</h2>
+          <p>The installer adds only a versioned directory and one command symlink. It never modifies agent configuration or shell startup files.</p>
+          <pre><code>rm "$HOME/.local/bin/agentctl"
+rm -r "$HOME/.local/share/agentctl"</code></pre>
+          <p>If you used <code>AGENTCTL_INSTALL_DIR</code> or <code>AGENTCTL_LIB_DIR</code>, remove the corresponding explicit paths instead.</p>
+        </section>
+
+        <section id="boundaries">
+          <p class="docs-step">Release boundary</p>
+          <h2>What v0.1 does not claim</h2>
+          <ul class="docs-list">
+            <li>Filesystem presence does not prove a target loaded a resource.</li>
+            <li>Matching files do not prove equivalent behavior across models.</li>
+            <li>Key-name detection does not prove a value is a valid credential.</li>
+            <li>agentctl does not yet import, render, apply, reconcile, or roll back target configuration.</li>
+          </ul>
+          <p>These are explicit roadmap capabilities, not implied current behavior. Follow development on <a href="https://github.com/lstan44/agentctl">GitHub</a>.</p>
+        </section>
+      </article>
+    </main>
+    <footer class="site-footer compact-footer">
+      <div class="shell footer-grid">
+        <p>agentctl is developed by <a href="https://justrepl.com">justREPL</a>.</p>
+        <nav aria-label="Footer navigation"><a href="/">Home</a><a href="/security/">Security</a><a href="https://github.com/lstan44/agentctl">GitHub</a></nav>
+      </div>
+    </footer>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

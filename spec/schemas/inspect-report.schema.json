@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/spec/inspect-report.schema.json",
+  "title": "agentctl inspect report",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "generatedAt",
+    "mode",
+    "summary",
+    "targets",
+    "duplicates",
+    "divergences",
+    "findings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "agentctl.inspect/v1alpha1"
+    },
+    "agentctlVersion": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "const": "read-only"
+    },
+    "home": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "detected", "root", "counts"],
+        "properties": {
+          "id": {
+            "enum": ["codex", "claude", "gemini", "opencode", "cursor"]
+          },
+          "label": {
+            "type": "string"
+          },
+          "detected": {
+            "type": "boolean"
+          },
+          "root": {
+            "type": "string"
+          },
+          "counts": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "duplicates": {
+      "type": "array"
+    },
+    "divergences": {
+      "type": "array"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "title", "detail", "remediation"],
+        "properties": {
+          "severity": {
+            "enum": ["high", "medium", "info"]
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

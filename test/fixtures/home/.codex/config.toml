@@ -1,0 +1,6 @@
+[mcp_servers.example]
+command = "example"
+authorization_token = "fixture-secret-must-never-appear"
+
+[hooks]
+enabled = true

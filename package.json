@@ -1,0 +1,53 @@
+{
+  "name": "@justrepl/agentctl",
+  "version": "0.1.0",
+  "description": "The open-source control plane for AI agent environments.",
+  "type": "module",
+  "bin": {
+    "agentctl": "./bin/agentctl.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "agentctl": "node ./bin/agentctl.mjs",
+    "build": "node ./scripts/build-site.mjs",
+    "lint": "node ./scripts/lint.mjs",
+    "test": "node --test",
+    "site:check": "node ./scripts/check-site.mjs",
+    "check": "npm run lint && npm test && npm run build && npm run site:check",
+    "release:package": "node ./scripts/package-release.mjs",
+    "dev": "npx wrangler dev",
+    "deploy:dry-run": "npm run build && npx wrangler deploy --dry-run",
+    "deploy": "npm run check && npx wrangler deploy"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-environment",
+    "configuration-as-code",
+    "codex",
+    "claude-code",
+    "gemini-cli",
+    "opencode",
+    "cursor"
+  ],
+  "author": "justREPL <https://justrepl.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lstan44/agentctl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lstan44/agentctl/issues"
+  },
+  "homepage": "https://agentctl.justrepl.com",
+  "devDependencies": {
+    "wrangler": "^4.110.0"
+  }
+}

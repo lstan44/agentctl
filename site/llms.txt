@@ -1,0 +1,32 @@
+# agentctl
+
+> agentctl is the open-source, local-first control plane for AI agent environments, developed by justREPL.
+
+- [Canonical site](https://agentctl.justrepl.com/)
+- [Source repository](https://github.com/lstan44/agentctl)
+- License: Apache-2.0
+
+## Current release
+
+v0.1 is a read-only inspector. It inventories known Codex, Claude Code, Gemini CLI, OpenCode, and Cursor configuration roots; identifies duplicate and divergent skills; inventories skill script files; and reports potential secret-bearing key names without reporting their values.
+
+The `inspect` and `doctor` commands never execute target tools, skills, scripts, hooks, plugins, or MCP servers, and never write into agent configuration roots.
+
+## Documentation
+
+- [Getting started](https://agentctl.justrepl.com/docs/)
+- [Security model](https://agentctl.justrepl.com/security/)
+- [Installer source](https://agentctl.justrepl.com/install.sh)
+- [JSON schema](https://github.com/lstan44/agentctl/blob/main/spec/schemas/inspect-report.schema.json)
+
+## Install
+
+```sh
+curl -fsSL https://agentctl.justrepl.com/install.sh | bash
+```
+
+Then run:
+
+```sh
+agentctl inspect
+```

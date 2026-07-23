@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">agentctl</title>
+  <desc id="desc">Know what controls your agents.</desc>
+  <rect width="1200" height="630" fill="#f3efe5"/>
+  <path d="M0 90h1200M0 540h1200" stroke="#cec8ba"/>
+  <path d="M90 0v630M1110 0v630" stroke="#cec8ba"/>
+  <rect x="90" y="90" width="1020" height="450" fill="#171714"/>
+  <rect x="136" y="136" width="72" height="72" rx="14" fill="#f3efe5"/>
+  <path d="M152 156l16 16-16 16" fill="none" stroke="#1f6668" stroke-width="7"/>
+  <path d="M175 190h17" stroke="#171714" stroke-width="7"/>
+  <circle cx="193" cy="151" r="5" fill="#d59b42"/>
+  <text x="236" y="184" fill="#f3efe5" font-family="ui-monospace, monospace" font-size="42" font-weight="600">agentctl</text>
+  <text x="136" y="334" fill="#f3efe5" font-family="Georgia, serif" font-size="78">Know what controls</text>
+  <text x="136" y="420" fill="#afd8d4" font-family="Georgia, serif" font-size="78" font-style="italic">your agents.</text>
+  <text x="136" y="484" fill="#9d998f" font-family="ui-monospace, monospace" font-size="22">OPEN-SOURCE · LOCAL-FIRST · READ-ONLY INSPECTION</text>
+  <text x="937" y="184" fill="#afd8d4" font-family="ui-monospace, monospace" font-size="20">by justREPL</text>
+</svg>

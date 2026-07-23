@@ -1,0 +1,32 @@
+name: Capability request
+description: Propose a target adapter, evidence layer, or control-plane capability.
+title: "capability: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Builder outcome
+      description: What should a high-agency engineer be able to accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Cross-agent semantics
+      description: Which target-native meanings or capability differences must be preserved?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and safety
+      description: How would agentctl prove success, bound authority, and recover from failure?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What can builders do today, and why is it insufficient?

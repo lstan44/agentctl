@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171714">
+    <meta name="description" content="agentctl is the open-source, local-first control plane for AI agent environments. Inspect Codex, Claude Code, Gemini CLI, OpenCode, and Cursor without changing a file.">
+    <link rel="canonical" href="https://agentctl.justrepl.com/">
+    <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="agentctl by justREPL">
+    <meta property="og:title" content="agentctl — Know what controls your agents.">
+    <meta property="og:description" content="The open-source control plane for AI agent environments.">
+    <meta property="og:url" content="https://agentctl.justrepl.com/">
+    <meta property="og:image" content="https://agentctl.justrepl.com/assets/og-agentctl.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="agentctl — Know what controls your agents.">
+    <meta name="twitter:description" content="The open-source control plane for AI agent environments.">
+    <meta name="twitter:image" content="https://agentctl.justrepl.com/assets/og-agentctl.png">
+    <title>agentctl — Know what controls your agents.</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav-shell">
+        <a class="brand" href="/" aria-label="agentctl home">
+          <img src="/assets/mark.svg" width="32" height="32" alt="">
+          <span>agentctl</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/docs/">Docs</a>
+          <a href="/security/">Security</a>
+          <a href="https://github.com/lstan44/agentctl">GitHub</a>
+          <a class="nav-origin" href="https://justrepl.com">by justREPL</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> v0.1 · read-only inspector</p>
+          <h1>Your agents have an environment. <em>Make it legible.</em></h1>
+          <p class="hero-lede">
+            Inspect the skills, guidance, agents, commands, hooks, MCP surfaces,
+            and possible secret-bearing fields distributed across your AI tools—
+            without changing a file.
+          </p>
+
+          <div class="install-panel" data-copy-scope>
+            <div class="install-meta">
+              <span>macOS + Linux</span>
+              <span>Node.js 20+</span>
+              <a href="/install.sh">inspect installer</a>
+            </div>
+            <div class="command-row">
+              <code data-copy-value>curl -fsSL https://agentctl.justrepl.com/install.sh | bash</code>
+              <button class="copy-button" type="button" data-copy-button aria-describedby="copy-status">
+                <span data-copy-label>Copy</span>
+              </button>
+            </div>
+            <p class="copy-status" id="copy-status" data-copy-status aria-live="polite">
+              Installs to ~/.local without sudo. Verifies the release checksum.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="/docs/">Start with inspect</a>
+            <a class="button button-secondary" href="https://github.com/lstan44/agentctl">Read the source <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+
+        <figure class="terminal" aria-labelledby="terminal-caption">
+          <figcaption id="terminal-caption">
+            <span>Representative local output</span>
+            <span class="terminal-state"><i aria-hidden="true"></i> read-only</span>
+          </figcaption>
+          <div class="terminal-body" tabindex="0">
+            <p><span class="prompt">$</span> agentctl inspect</p>
+            <p class="terminal-heading">agentctl inspect <span>· read-only</span></p>
+            <p>4/5 targets detected · 83 resources</p>
+            <div class="terminal-rule"></div>
+            <div class="terminal-grid terminal-labels">
+              <span>TARGET</span><span>STATE</span><span>SKILLS</span>
+            </div>
+            <div class="terminal-grid">
+              <span>Codex</span><span class="ok">detected</span><span>28</span>
+              <span>Claude Code</span><span class="ok">detected</span><span>27</span>
+              <span>Gemini CLI</span><span class="ok">detected</span><span>12</span>
+              <span>OpenCode</span><span class="ok">detected</span><span>14</span>
+              <span>Cursor</span><span class="quiet">absent</span><span>0</span>
+            </div>
+            <div class="terminal-rule"></div>
+            <p class="finding"><strong>HIGH</strong> 2 potential secret-bearing fields detected</p>
+            <p class="finding"><strong>MED</strong> 1 same-name skill has divergent definitions</p>
+            <p class="finding info"><strong>INFO</strong> 15 byte-identical skills can share source</p>
+            <p class="terminal-foot">No files were changed. Use --json for the full report.</p>
+          </div>
+        </figure>
+      </section>
+
+      <section class="manifest-band" aria-label="Supported agent environments">
+        <div class="shell manifest-track">
+          <span>Codex</span>
+          <span>Claude Code</span>
+          <span>Gemini CLI</span>
+          <span>OpenCode</span>
+          <span>Cursor</span>
+          <span>Future adapters</span>
+        </div>
+      </section>
+
+      <section class="section shell" id="inspect">
+        <div class="section-intro">
+          <p class="eyebrow">Observe before manage</p>
+          <h2>One scan. Four kinds of signal.</h2>
+          <p>
+            agentctl does not begin by asking for authority. It begins by explaining
+            the environment that already exists.
+          </p>
+        </div>
+        <div class="signal-ledger">
+          <article>
+            <span class="ledger-index">01</span>
+            <div>
+              <h3>Inventory</h3>
+              <p>Known roots, active resource types, target presence, config surfaces, and script-bearing skills.</p>
+            </div>
+            <code>inspect.targets[]</code>
+          </article>
+          <article>
+            <span class="ledger-index">02</span>
+            <div>
+              <h3>Duplication</h3>
+              <p>Byte-identical skill definitions that can be consolidated into one canonical source.</p>
+            </div>
+            <code>sha256(SKILL.md)</code>
+          </article>
+          <article>
+            <span class="ledger-index">03</span>
+            <div>
+              <h3>Divergence</h3>
+              <p>Same-name resources whose definitions differ across targets and need an explicit decision.</p>
+            </div>
+            <code>name → variants</code>
+          </article>
+          <article>
+            <span class="ledger-index">04</span>
+            <div>
+              <h3>Risk surface</h3>
+              <p>Potential secret keys, hooks, MCP configuration, and executable files—without printing values or running code.</p>
+            </div>
+            <code>mode: read-only</code>
+          </article>
+        </div>
+      </section>
+
+      <section class="section truth-section">
+        <div class="shell">
+          <div class="section-intro split-intro">
+            <div>
+              <p class="eyebrow">Agent Environment as Code</p>
+              <h2>File sync is not semantic control.</h2>
+            </div>
+            <p>
+              A file can arrive at the right path and still be ignored, weakened,
+              or interpreted under a different scope. agentctl keeps the evidence
+              layers separate.
+            </p>
+          </div>
+
+          <ol class="truth-flow">
+            <li>
+              <span>01</span>
+              <strong>Desired</strong>
+              <small>canonical intent</small>
+            </li>
+            <li>
+              <span>02</span>
+              <strong>Rendered</strong>
+              <small>target-native output</small>
+            </li>
+            <li class="active">
+              <span>03</span>
+              <strong>Filesystem</strong>
+              <small>observed in v0.1</small>
+            </li>
+            <li>
+              <span>04</span>
+              <strong>Runtime</strong>
+              <small>target discovery</small>
+            </li>
+            <li>
+              <span>05</span>
+              <strong>Behavior</strong>
+              <small>bounded evidence</small>
+            </li>
+          </ol>
+          <p class="truth-note">
+            v0.1 observes filesystem truth. It never claims that static presence
+            proves runtime discovery or model behavior.
+          </p>
+        </div>
+      </section>
+
+      <section class="section shell release-section">
+        <div class="release-header">
+          <div>
+            <p class="eyebrow">The honest release</p>
+            <h2>Useful now. Explicit about next.</h2>
+          </div>
+          <p class="release-version">v0.1.0 <span>alpha</span></p>
+        </div>
+        <div class="release-grid">
+          <div class="release-column">
+            <h3><span class="release-check" aria-hidden="true">✓</span> Shipping</h3>
+            <ul>
+              <li>Read-only multi-agent inventory</li>
+              <li>Duplicate and divergence analysis</li>
+              <li>Secret-key and executable-surface signals</li>
+              <li>Human and stable JSON output</li>
+              <li>Safe canonical repository scaffolding</li>
+              <li>Checksum-verified, no-sudo installation</li>
+            </ul>
+          </div>
+          <div class="release-column roadmap">
+            <h3><span aria-hidden="true">→</span> Roadmap</h3>
+            <ul>
+              <li>Target-native semantic adapters</li>
+              <li>Capability-loss accounting</li>
+              <li>Content-addressed plan and apply</li>
+              <li>Atomic rollback and drift records</li>
+              <li>Secret-manager references</li>
+              <li>Runtime and behavioral conformance</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section safety-section">
+        <div class="shell safety-grid">
+          <div>
+            <p class="eyebrow eyebrow-inverse">Trust is product behavior</p>
+            <h2>Inspection should not require surrender.</h2>
+          </div>
+          <div class="safety-list">
+            <article>
+              <span>NW</span>
+              <div><h3>No writes</h3><p><code>inspect</code> and <code>doctor</code> never modify agent roots.</p></div>
+            </article>
+            <article>
+              <span>NE</span>
+              <div><h3>No execution</h3><p>Targets, plugins, skills, scripts, and hooks are never invoked during inspection.</p></div>
+            </article>
+            <article>
+              <span>NS</span>
+              <div><h3>No secret values</h3><p>Reports contain potential key names and line numbers—not detected credential values.</p></div>
+            </article>
+            <article>
+              <span>NT</span>
+              <div><h3>No telemetry</h3><p>The CLI has no analytics endpoint, account requirement, or inspection upload.</p></div>
+            </article>
+          </div>
+          <a class="text-link inverse-link" href="/security/">Read the threat model <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <section class="closing shell">
+        <p class="eyebrow">Open source · Apache 2.0</p>
+        <h2>Know the environment.<br>Then grant it authority.</h2>
+        <div class="closing-actions">
+          <a class="button button-primary" href="/docs/">Install and inspect</a>
+          <a class="text-link" href="https://github.com/lstan44/agentctl">github.com/lstan44/agentctl <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="brand footer-brand" href="/">
+            <img src="/assets/mark.svg" width="28" height="28" alt="">
+            <span>agentctl</span>
+          </a>
+          <p>An open-source project developed by <a href="https://justrepl.com">justREPL</a>.</p>
+        </div>
+        <nav aria-label="Footer navigation">
+          <a href="/docs/">Docs</a>
+          <a href="/security/">Security</a>
+          <a href="https://github.com/lstan44/agentctl">GitHub</a>
+          <a href="/llms.txt">llms.txt</a>
+        </nav>
+        <p class="footer-meta">Local-first.<br>Vendor-neutral.<br>Evidence over magic.</p>
+      </div>
+    </footer>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>
