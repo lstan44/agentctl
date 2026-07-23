@@ -49,6 +49,7 @@ for (const file of htmlFiles) {
 const home = readFileSync(join(dist, "index.html"), "utf8");
 const docs = readFileSync(join(dist, "docs", "index.html"), "utf8");
 const installer = readFileSync(join(dist, "install.sh"), "utf8");
+const headers = readFileSync(join(dist, "_headers"), "utf8");
 const requiredCommand =
   "curl -fsSL https://agentctl.justrepl.com/install.sh | bash";
 
@@ -76,6 +77,11 @@ if (!installer.includes("checksum verification failed")) {
 }
 if (!installer.includes('say "  agentctl init"')) {
   failures.push("installer: missing canonical-root next step");
+}
+if (!headers.includes("must-revalidate, no-transform")) {
+  failures.push(
+    "headers: HTML must prevent Cloudflare analytics-script injection",
+  );
 }
 for (const requiredSurface of [
   "agentctl init",

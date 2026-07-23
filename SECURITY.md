@@ -83,6 +83,10 @@ Checksums protect against accidental corruption but are not independent
 signature verification when the archive and checksum share the same release
 channel. Signed provenance is a v1 release gate.
 
+The CLI contains no telemetry client. The website uses no analytics code, and
+production HTML sets `Cache-Control: no-transform` so Cloudflare does not
+inject its optional browser analytics beacon.
+
 ## Threats we actively test
 
 - secret-value disclosure in JSON or human output;
