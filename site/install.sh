@@ -2,7 +2,7 @@
 set -eu
 
 PROGRAM="agentctl"
-VERSION="${AGENTCTL_VERSION:-0.1.0}"
+VERSION="${AGENTCTL_VERSION:-0.1.1}"
 REPOSITORY="${AGENTCTL_REPOSITORY:-https://github.com/lstan44/agentctl}"
 DOWNLOAD_BASE="${AGENTCTL_DOWNLOAD_BASE:-${REPOSITORY}/releases/download/v${VERSION}}"
 ARCHIVE="${PROGRAM}-${VERSION}.tar.gz"
@@ -73,7 +73,8 @@ mv "$STAGE_DIRECTORY" "$VERSION_DIRECTORY"
 CURRENT_LINK="${LIB_ROOT}/current"
 CURRENT_STAGE="${LIB_ROOT}/.current-$$"
 ln -s "$VERSION" "$CURRENT_STAGE"
-mv -f "$CURRENT_STAGE" "$CURRENT_LINK"
+node -e 'require("node:fs").renameSync(process.argv[1], process.argv[2])' \
+  "$CURRENT_STAGE" "$CURRENT_LINK"
 
 WRAPPER_STAGE="${BIN_DIRECTORY}/.agentctl-$$"
 {

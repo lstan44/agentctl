@@ -2,6 +2,11 @@
 
 All notable changes to agentctl are documented here.
 
+## 0.1.1 — 2026-07-23
+
+- Replace the active install symlink with a portable atomic rename.
+- Add regression coverage for repeat installation and activation invariants.
+
 ## 0.1.0 — 2026-07-23
 
 ### Added
