@@ -2,7 +2,7 @@
 set -eu
 
 PROGRAM="agentctl"
-VERSION="${AGENTCTL_VERSION:-0.1.1}"
+VERSION="${AGENTCTL_VERSION:-0.2.0}"
 REPOSITORY="${AGENTCTL_REPOSITORY:-https://github.com/lstan44/agentctl}"
 DOWNLOAD_BASE="${AGENTCTL_DOWNLOAD_BASE:-${REPOSITORY}/releases/download/v${VERSION}}"
 ARCHIVE="${PROGRAM}-${VERSION}.tar.gz"
@@ -24,9 +24,26 @@ command -v node >/dev/null 2>&1 || fail "Node.js 20 or newer is required: https:
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 [ "$NODE_MAJOR" -ge 20 ] || fail "Node.js 20 or newer is required; found $(node --version)."
 
+if [ -n "${AGENTCTL_MIN_VERSION:-}" ]; then
+  node -e '
+    const parse = (value) => {
+      const match = value.match(/^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/);
+      if (!match) process.exit(2);
+      return match.slice(1).map(Number);
+    };
+    const selected = parse(process.argv[1]);
+    const minimum = parse(process.argv[2]);
+    for (let index = 0; index < 3; index += 1) {
+      if (selected[index] > minimum[index]) process.exit(0);
+      if (selected[index] < minimum[index]) process.exit(1);
+    }
+  ' "$VERSION" "$AGENTCTL_MIN_VERSION" ||
+    fail "refusing to install v${VERSION} over newer v${AGENTCTL_MIN_VERSION}."
+fi
+
 case "$(uname -s)" in
   Darwin|Linux) ;;
-  *) fail "v0.1 supports macOS and Linux." ;;
+  *) fail "v0.2 supports macOS and Linux." ;;
 esac
 
 TMP_ROOT="${TMPDIR:-/tmp}"
@@ -64,7 +81,7 @@ tar -xzf "${TMP_DIRECTORY}/${ARCHIVE}" -C "$STAGE_DIRECTORY" --strip-components=
 [ -f "${STAGE_DIRECTORY}/bin/agentctl.mjs" ] || fail "release archive is missing bin/agentctl.mjs."
 
 if [ -e "$VERSION_DIRECTORY" ]; then
-  BACKUP_DIRECTORY="${LIB_ROOT}/${VERSION}.previous.$(date +%s)"
+  BACKUP_DIRECTORY="${LIB_ROOT}/${VERSION}.previous.$(date +%s).$$"
   mv "$VERSION_DIRECTORY" "$BACKUP_DIRECTORY"
   say "Preserved the previous v${VERSION} files at ${BACKUP_DIRECTORY}"
 fi
@@ -76,13 +93,9 @@ ln -s "$VERSION" "$CURRENT_STAGE"
 node -e 'require("node:fs").renameSync(process.argv[1], process.argv[2])' \
   "$CURRENT_STAGE" "$CURRENT_LINK"
 
-WRAPPER_STAGE="${BIN_DIRECTORY}/.agentctl-$$"
-{
-  printf '%s\n' '#!/bin/sh'
-  printf 'exec node "%s" "$@"\n' "${CURRENT_LINK}/bin/agentctl.mjs"
-} > "$WRAPPER_STAGE"
-chmod 755 "$WRAPPER_STAGE"
-mv -f "$WRAPPER_STAGE" "${BIN_DIRECTORY}/agentctl"
+COMMAND_STAGE="${BIN_DIRECTORY}/.agentctl-$$"
+ln -s "${CURRENT_LINK}/bin/agentctl.mjs" "$COMMAND_STAGE"
+mv -f "$COMMAND_STAGE" "${BIN_DIRECTORY}/agentctl"
 
 say ""
 say "Installed agentctl v${VERSION} to ${BIN_DIRECTORY}/agentctl"
@@ -96,4 +109,6 @@ case ":${PATH}:" in
 esac
 say ""
 say "Next:"
+say "  agentctl init"
+say "  agentctl agents status"
 say "  agentctl inspect"

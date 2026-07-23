@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/tool-plan.schema.json",
+  "title": "agentctl tool lifecycle plan",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "operation",
+    "root",
+    "tool",
+    "before",
+    "channel",
+    "channelLabel",
+    "configurationPolicy",
+    "desiredChange",
+    "step",
+    "preconditions",
+    "requiresConfirmation"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "agentctl.tool-plan/v1alpha1" },
+    "agentctlVersion": { "type": "string" },
+    "operation": { "enum": ["install", "update", "uninstall"] },
+    "root": { "type": "string" },
+    "tool": {
+      "type": "object",
+      "required": ["id", "label", "command", "sourceUrl"]
+    },
+    "before": { "type": "object" },
+    "channel": { "type": ["string", "null"] },
+    "channelLabel": { "type": "string" },
+    "configurationPolicy": { "const": "preserve" },
+    "desiredChange": { "type": ["object", "null"] },
+    "step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "command", "display"],
+          "properties": {
+            "kind": { "const": "command" },
+            "command": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "display": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "commands", "display"],
+          "properties": {
+            "kind": { "const": "command-sequence" },
+            "commands": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              }
+            },
+            "display": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "url",
+            "allowedHosts",
+            "interpreter",
+            "args",
+            "downloadTimeoutMs",
+            "display"
+          ],
+          "properties": {
+            "kind": { "const": "remote-installer" },
+            "url": { "type": "string", "format": "uri" },
+            "allowedHosts": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "interpreter": { "type": "string" },
+            "args": { "type": "array", "items": { "type": "string" } },
+            "downloadTimeoutMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pathPolicy": {
+              "type": ["string", "null"],
+              "enum": [null, "prepend-home-local-bin"]
+            },
+            "display": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "paths", "display"],
+          "properties": {
+            "kind": { "const": "remove-paths" },
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "display": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "satisfied", "detail"],
+        "properties": {
+          "kind": { "type": "string" },
+          "satisfied": { "type": "boolean" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "requiresConfirmation": { "const": true }
+  }
+}

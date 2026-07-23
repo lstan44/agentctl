@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/self-receipt.schema.json",
+  "title": "agentctl verified self lifecycle receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "operation",
+    "beforeVersion",
+    "afterVersion",
+    "preservationPolicy",
+    "canonicalRoot",
+    "execution",
+    "completedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "agentctl.self-receipt/v1alpha1" },
+    "agentctlVersion": { "type": "string" },
+    "operation": { "enum": ["update", "uninstall"] },
+    "beforeVersion": { "type": "string" },
+    "afterVersion": { "type": ["string", "null"] },
+    "preservationPolicy": { "type": "string" },
+    "canonicalRoot": { "type": "string" },
+    "execution": { "type": "object" },
+    "completedAt": { "type": "string", "format": "date-time" }
+  }
+}

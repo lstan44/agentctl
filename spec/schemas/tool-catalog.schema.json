@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/tool-catalog.schema.json",
+  "title": "agentctl public tool catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "tools"],
+  "properties": {
+    "schemaVersion": {
+      "const": "agentctl.tool-catalog/v1alpha1"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "command",
+          "defaultChannel",
+          "channels",
+          "sourceUrl",
+          "configurationPolicy"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "label": { "type": "string", "minLength": 1 },
+          "command": { "type": "string", "minLength": 1 },
+          "defaultChannel": { "type": "string", "minLength": 1 },
+          "channels": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "label"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "label": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "sourceUrl": { "type": "string", "format": "uri" },
+          "configurationPolicy": { "const": "preserve" }
+        }
+      }
+    }
+  }
+}

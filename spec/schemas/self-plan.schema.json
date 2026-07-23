@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/self-plan.schema.json",
+  "title": "agentctl self lifecycle plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "operation",
+    "currentVersion",
+    "paths",
+    "canonicalRoot",
+    "preservationPolicy",
+    "step",
+    "preconditions",
+    "requiresConfirmation"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "agentctl.self-plan/v1alpha1" },
+    "agentctlVersion": { "type": "string" },
+    "operation": { "enum": ["update", "uninstall"] },
+    "currentVersion": { "type": "string" },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "home",
+        "command",
+        "binDirectory",
+        "libraryDirectory"
+      ],
+      "properties": {
+        "home": { "type": "string" },
+        "command": { "type": "string" },
+        "binDirectory": { "type": "string" },
+        "libraryDirectory": { "type": "string" }
+      }
+    },
+    "canonicalRoot": { "type": "string" },
+    "preservationPolicy": { "type": "string" },
+    "step": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "url",
+            "allowedHosts",
+            "interpreter",
+            "args",
+            "pathPolicy",
+            "downloadTimeoutMs",
+            "display"
+          ],
+          "properties": {
+            "kind": { "const": "remote-installer" },
+            "url": { "type": "string", "format": "uri" },
+            "allowedHosts": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "interpreter": { "const": "bash" },
+            "args": { "type": "array", "items": { "type": "string" } },
+            "pathPolicy": { "type": "null" },
+            "downloadTimeoutMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "display": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "paths", "display"],
+          "properties": {
+            "kind": { "const": "remove-paths" },
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "display": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "satisfied", "detail"],
+        "properties": {
+          "kind": { "type": "string" },
+          "satisfied": { "type": "boolean" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "requiresConfirmation": { "const": true }
+  }
+}

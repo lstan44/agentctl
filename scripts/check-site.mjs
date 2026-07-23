@@ -74,8 +74,35 @@ if (/\bsudo\b/.test(installer)) {
 if (!installer.includes("checksum verification failed")) {
   failures.push("installer: missing checksum failure guard");
 }
-if (!installer.includes('say "  agentctl inspect"')) {
-  failures.push("installer: missing next-step receipt");
+if (!installer.includes('say "  agentctl init"')) {
+  failures.push("installer: missing canonical-root next step");
+}
+for (const requiredSurface of [
+  "agentctl init",
+  "agentctl agents status",
+  "agentctl agents install",
+  "agentctl self update",
+  "~/.agentctl",
+  "--dry-run",
+  "--yes",
+]) {
+  if (!docs.includes(requiredSurface)) {
+    failures.push(`docs: missing v0.2 surface ${requiredSurface}`);
+  }
+}
+for (const toolName of ["OpenClaw", "Hermes"]) {
+  if (!home.includes(toolName) || !docs.includes(toolName)) {
+    failures.push(`site: missing expanded catalog tool ${toolName}`);
+  }
+}
+if (!home.includes("v0.2.0")) {
+  failures.push("home: missing current release version");
+}
+if (!home.includes("Configuration-preserving uninstall")) {
+  failures.push("home: missing lifecycle preservation promise");
+}
+if (!docs.includes('<section id="install" data-copy-scope>')) {
+  failures.push("docs: install command and live status must share one copy scope");
 }
 
 if (failures.length > 0) {
@@ -84,5 +111,5 @@ if (failures.length > 0) {
 }
 
 process.stdout.write(
-  `Validated ${htmlFiles.length} HTML pages, internal references, install surfaces, provenance, and installer guards.\n`,
+  `Validated ${htmlFiles.length} HTML pages, internal references, v0.2 lifecycle surfaces, provenance, and installer guards.\n`,
 );

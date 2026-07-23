@@ -9,70 +9,207 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { homedir } from "node:os";
+import { basename, dirname, join } from "node:path";
+import {
+  isInitializedRoot,
+  resolveAgentRoot,
+} from "./root.mjs";
+import { defaultDesiredTools } from "./tool-state.mjs";
 
-const files = {
-  "agentctl.yaml": `apiVersion: agentctl.justrepl.com/v1alpha1
+function scaffoldFiles() {
+  return {
+    "agentctl.yaml": `apiVersion: agentctl.justrepl.com/v1alpha1
 kind: AgentEnvironment
 metadata:
   name: personal
 spec:
   guidance:
     - catalog/guidance/global.md
+  tools:
+    source: catalog/tools.json
   targets:
     codex:
       enabled: true
     claude:
       enabled: true
+    opencode:
+      enabled: true
+    gemini:
+      enabled: true
+    copilot:
+      enabled: true
+    openclaw:
+      enabled: true
+    hermes:
+      enabled: true
 `,
-  ".gitignore": `.agentctl/build/
+    ".gitignore": `.agentctl/build/
 .agentctl/state/
 *.local.yaml
 `,
-  "README.md": `# Agent environment
+    "README.md": `# Agent environment
 
-This repository is the canonical source for an Agent Environment as Code setup.
+This Git repository is the canonical source for your Agent Environment as Code.
+Commit it, push it to a private or public GitHub repository, and use it to carry
+the same declared setup across machines.
 
-Validate and inspect with:
+Inspect the canonical configuration without running an agent:
 
 \`\`\`sh
 agentctl inspect
+agentctl agents list
 \`\`\`
 
-Target-native rendering and reconciliation arrive in a later agentctl release.
+Plan lifecycle changes before applying them:
+
+\`\`\`sh
+agentctl agents install codex --dry-run
+agentctl agents install codex --yes
+\`\`\`
+
+\`catalog/tools.json\` is version-controlled desired state. Machine observations
+and operation receipts live under ignored \`.agentctl/state/\`; credentials and
+agent-owned configuration remain outside this repository.
 `,
-  "catalog/guidance/global.md": `# Shared agent guidance
+    "catalog/tools.json": `${JSON.stringify(defaultDesiredTools(), null, 2)}\n`,
+    "catalog/guidance/global.md": `# Shared agent guidance
 
 Replace this text with principles that should apply across supported agents.
 Keep target-specific behavior in explicit target overlays.
 `,
-  "catalog/skills/.gitkeep": "",
-  "targets/codex/.gitkeep": "",
-  "targets/claude/.gitkeep": "",
-};
+    "catalog/skills/.gitkeep": "",
+    "targets/codex/.gitkeep": "",
+    "targets/claude/.gitkeep": "",
+    "targets/opencode/.gitkeep": "",
+    "targets/gemini/.gitkeep": "",
+    "targets/copilot/.gitkeep": "",
+    "targets/openclaw/.gitkeep": "",
+    "targets/hermes/.gitkeep": "",
+  };
+}
 
-export function initPlan(directory) {
-  const target = resolve(directory || "agent-environment");
+function gitAvailable(env) {
+  const result = spawnSync("git", ["--version"], {
+    encoding: "utf8",
+    env,
+    shell: false,
+  });
+  return !result.error && result.status === 0;
+}
+
+function initializeGit(target, env) {
+  if (!gitAvailable(env)) {
+    return {
+      initialized: false,
+      warning:
+        "Git was not found. Install Git, then run `git init -b main` in the canonical root.",
+    };
+  }
+  const preferred = spawnSync("git", ["init", "-b", "main", target], {
+    encoding: "utf8",
+    env,
+    shell: false,
+  });
+  if (!preferred.error && preferred.status === 0) {
+    return { initialized: true, warning: null };
+  }
+  const fallback = spawnSync("git", ["init", target], {
+    encoding: "utf8",
+    env,
+    shell: false,
+  });
+  if (fallback.error || fallback.status !== 0) {
+    const detail =
+      fallback.error?.message ??
+      fallback.stderr?.trim() ??
+      "git init failed";
+    return {
+      initialized: false,
+      warning: `Canonical root was created, but Git initialization failed: ${detail}`,
+    };
+  }
+  return { initialized: true, warning: null };
+}
+
+function nextSteps(target, { gitInitialized }) {
+  return [
+    `cd ${JSON.stringify(target)}`,
+    ...(gitInitialized ? [] : ["git init -b main"]),
+    "git add .",
+    'git commit -m "Initialize canonical agent environment"',
+    "git remote add origin git@github.com:YOUR-USER/YOUR-AGENT-ENV.git",
+    "git push -u origin main",
+  ];
+}
+
+export function initPlan(
+  directory,
+  {
+    home = homedir(),
+    env = process.env,
+    git = true,
+  } = {},
+) {
+  const target = resolveAgentRoot({
+    root: directory,
+    home,
+    env,
+  });
   return {
     schemaVersion: "agentctl.init-plan/v1alpha1",
     mode: "write-explicit",
     target,
-    files: Object.keys(files).sort(),
+    initializeGit: git,
+    files: Object.keys(scaffoldFiles()).sort(),
   };
 }
 
-export function initializeEnvironment(directory, { dryRun = false } = {}) {
-  const plan = initPlan(directory);
-  if (dryRun) return { ...plan, applied: false };
+export function initializeEnvironment(
+  directory,
+  {
+    dryRun = false,
+    git = true,
+    home = homedir(),
+    env = process.env,
+  } = {},
+) {
+  const plan = initPlan(directory, { home, env, git });
+  if (dryRun) {
+    return {
+      ...plan,
+      applied: false,
+      idempotent: false,
+      gitInitialized: false,
+      nextSteps: nextSteps(plan.target, { gitInitialized: false }),
+    };
+  }
 
-  if (existsSync(plan.target)) {
-    const entries = readdirSync(plan.target);
-    if (entries.length > 0) {
-      throw new Error(
-        `Refusing to initialize non-empty directory: ${plan.target}`,
-        { cause: { code: "E_NOT_EMPTY" } },
-      );
-    }
+  if (isInitializedRoot(plan.target)) {
+    const alreadyGit = existsSync(join(plan.target, ".git"));
+    const gitResult =
+      !alreadyGit && git
+        ? initializeGit(plan.target, env)
+        : { initialized: alreadyGit, warning: null };
+    return {
+      ...plan,
+      applied: false,
+      idempotent: true,
+      gitInitialized: gitResult.initialized,
+      warning: gitResult.warning,
+      manifest: readFileSync(join(plan.target, "agentctl.yaml"), "utf8"),
+      nextSteps: nextSteps(plan.target, {
+        gitInitialized: gitResult.initialized,
+      }),
+    };
+  }
+
+  if (existsSync(plan.target) && readdirSync(plan.target).length > 0) {
+    throw new Error(
+      `Refusing to initialize unrelated non-empty directory: ${plan.target}`,
+      { cause: { code: "E_NOT_EMPTY" } },
+    );
   }
 
   const parent = dirname(plan.target);
@@ -82,10 +219,13 @@ export function initializeEnvironment(directory, { dryRun = false } = {}) {
   );
 
   try {
-    for (const [relativePath, content] of Object.entries(files)) {
+    for (const [relativePath, content] of Object.entries(scaffoldFiles())) {
       const destination = join(stage, relativePath);
       mkdirSync(dirname(destination), { recursive: true });
-      writeFileSync(destination, content, { encoding: "utf8", flag: "wx" });
+      writeFileSync(destination, content, {
+        encoding: "utf8",
+        flag: "wx",
+      });
     }
 
     if (existsSync(plan.target)) rmdirSync(plan.target);
@@ -95,11 +235,21 @@ export function initializeEnvironment(directory, { dryRun = false } = {}) {
     throw error;
   }
 
+  const gitResult = git
+    ? initializeGit(plan.target, env)
+    : { initialized: false, warning: null };
+
   return {
     ...plan,
     applied: true,
+    idempotent: false,
+    gitInitialized: gitResult.initialized,
+    warning: gitResult.warning,
     manifest: readFileSync(join(plan.target, "agentctl.yaml"), "utf8"),
+    nextSteps: nextSteps(plan.target, {
+      gitInitialized: gitResult.initialized,
+    }),
   };
 }
 
-export const initFiles = files;
+export const initFiles = scaffoldFiles();

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/tool-receipt.schema.json",
+  "title": "agentctl verified tool lifecycle receipt",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "operation",
+    "root",
+    "tool",
+    "channel",
+    "configurationPolicy",
+    "execution",
+    "before",
+    "after",
+    "completedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "agentctl.tool-receipt/v1alpha1" },
+    "agentctlVersion": { "type": "string" },
+    "operation": { "enum": ["install", "update", "uninstall"] },
+    "root": { "type": "string" },
+    "tool": { "type": "object" },
+    "channel": { "type": ["string", "null"] },
+    "configurationPolicy": { "const": "preserve" },
+    "execution": { "type": "object" },
+    "before": { "type": "object" },
+    "after": { "type": "object" },
+    "completedAt": { "type": "string", "format": "date-time" }
+  }
+}

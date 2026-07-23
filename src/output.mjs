@@ -103,19 +103,167 @@ export function printDoctor(report, { color = true, stream = process.stdout } = 
 
 export function printInit(result, { color = true, stream = process.stdout } = {}) {
   const c = palette(color);
-  const verb = result.applied ? "initialized" : "would initialize";
+  const verb = result.idempotent
+    ? "already initialized"
+    : result.applied
+      ? "initialized"
+      : "would initialize";
   const lines = [
-    `${c.teal("agentctl init")} ${c.dim(`· ${result.applied ? "write complete" : "dry run"}`)}`,
+    `${c.teal("agentctl init")} ${c.dim(`· ${result.idempotent ? "idempotent" : result.applied ? "write complete" : "dry run"}`)}`,
     "",
     `${c.green(verb)} ${result.target}`,
-    ...result.files.map((file) => `  ${c.dim("+")} ${file}`),
   ];
+  if (!result.idempotent) {
+    lines.push(...result.files.map((file) => `  ${c.dim("+")} ${file}`));
+  }
+  lines.push(
+    "",
+    !result.applied && !result.idempotent
+      ? result.initializeGit
+        ? c.dim("Git repository would be initialized. No commit or remote would be created.")
+        : c.dim("Git initialization is disabled for this run.")
+      : result.gitInitialized
+        ? c.green("Git repository initialized. No commit or remote was created.")
+        : c.dim("Git repository was not initialized."),
+  );
+  if (result.warning) lines.push(c.amber(result.warning));
   if (result.applied) {
-    lines.push("", "Next: review agentctl.yaml and commit the repository.");
+    lines.push(
+      "",
+      c.bold("Version-control it and push to GitHub"),
+      ...result.nextSteps.map((step) => `  ${step}`),
+    );
+  } else if (result.idempotent) {
+    lines.push(
+      "",
+      c.bold("Git/GitHub next steps"),
+      ...result.nextSteps.map((step) => `  ${step}`),
+    );
   } else {
     lines.push("", "No files were changed.");
   }
   stream.write(`${lines.join("\n")}\n`);
+}
+
+export function printRoot(root, stream = process.stdout) {
+  stream.write(`${root}\n`);
+}
+
+export function printToolCatalog(
+  report,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  const lines = [
+    `${c.teal("agentctl agents list")} ${c.dim("· provider-agnostic catalog")}`,
+    "",
+    `${pad("ID", 12)} ${pad("TOOL", 24)} ${pad("DEFAULT", 10)} CHANNELS`,
+  ];
+  for (const tool of report.tools) {
+    lines.push(
+      `${pad(tool.id, 12)} ${pad(tool.label, 24)} ${pad(tool.defaultChannel, 10)} ${tool.channels.map((channel) => channel.id).join(", ")}`,
+    );
+  }
+  lines.push(
+    "",
+    c.dim("Lifecycle operations preserve agent-owned credentials and configuration."),
+  );
+  stream.write(`${lines.join("\n")}\n`);
+}
+
+export function printToolStatus(
+  report,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  const lines = [
+    `${c.teal("agentctl agents status")} ${c.dim("· version probes only")}`,
+    `${report.summary.installed}/${report.summary.catalogTools} installed · ${report.summary.drifted} drifted`,
+    "",
+    `${pad("ID", 12)} ${pad("INSTALLED", 11)} ${pad("VERSION", 15)} ${pad("CHANNEL", 10)} ${pad("DESIRED", 9)} DRIFT`,
+  ];
+  for (const tool of report.tools) {
+    lines.push(
+      `${pad(tool.id, 12)} ${pad(tool.installed ? "yes" : "no", 11)} ${pad(tool.version ?? "—", 15)} ${pad(tool.channel ?? "unknown", 10)} ${pad(tool.desired.enabled ? "enabled" : "disabled", 9)} ${tool.drift}`,
+    );
+    if (tool.versionError) {
+      lines.push(`  ${c.amber("version probe failed:")} ${tool.versionError}`);
+    }
+  }
+  lines.push("", c.dim(`Canonical root: ${report.root}`));
+  stream.write(`${lines.join("\n")}\n`);
+}
+
+export function printToolPlan(
+  plan,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  const desired = plan.desiredChange
+    ? `desired ${plan.desiredChange.enabled ? "enabled" : "disabled"}`
+    : "desired state unchanged";
+  const lines = [
+    `${c.teal(`agentctl agents ${plan.operation}`)} ${c.dim("· exact plan")}`,
+    "",
+    `  tool       ${plan.tool.label} (${plan.tool.id})`,
+    `  channel    ${plan.channelLabel}`,
+    `  desired    ${desired}`,
+    `  config     preserve`,
+    `  execute    ${plan.step.display}`,
+    ...plan.preconditions.map(
+      (precondition) =>
+        `  requires   ${precondition.satisfied ? "ready" : "MISSING"} · ${precondition.detail}`,
+    ),
+    "",
+  ];
+  stream.write(`${lines.join("\n")}\n`);
+}
+
+export function printToolReceipt(
+  receipt,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  stream.write(
+    `${c.green("completed")} ${receipt.operation} ${receipt.tool.label}` +
+      `${receipt.after.version ? ` · ${receipt.after.version}` : ""}` +
+      ` · configuration preserved\n`,
+  );
+}
+
+export function printSelfPlan(
+  plan,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  const lines = [
+    `${c.teal(`agentctl self ${plan.operation}`)} ${c.dim("· exact plan")}`,
+    "",
+    `  current    ${plan.currentVersion}`,
+    `  preserve   ${plan.preservationPolicy}`,
+    `  root       ${plan.canonicalRoot}`,
+    `  execute    ${plan.step.display}`,
+    ...plan.preconditions.map(
+      (precondition) =>
+        `  requires   ${precondition.satisfied ? "ready" : "MISSING"} · ${precondition.detail}`,
+    ),
+    "",
+  ];
+  stream.write(`${lines.join("\n")}\n`);
+}
+
+export function printSelfReceipt(
+  receipt,
+  { color = true, stream = process.stdout } = {},
+) {
+  const c = palette(color);
+  const version = receipt.afterVersion
+    ? ` · ${receipt.afterVersion}`
+    : "";
+  stream.write(
+    `${c.green("completed")} self ${receipt.operation}${version}` +
+      ` · canonical root preserved at ${receipt.canonicalRoot}\n`,
+  );
 }
 
 export function printJson(value, stream = process.stdout) {

@@ -29,6 +29,8 @@ jobs:
           grep -F "github.com/lstan44/agentctl" "$RUNNER_TEMP/home.html"
           grep -F "curl -fsSL https://agentctl.justrepl.com/install.sh | bash" \
             "$RUNNER_TEMP/home.html"
+          grep -F "v0.2.0" "$RUNNER_TEMP/home.html"
+          grep -F "agentctl agents status" "$RUNNER_TEMP/home.html"
           grep -i "^cache-control: no-store" "$RUNNER_TEMP/install.headers"
           grep -F "AGENTCTL_VERSION:-${expected_version}" "$RUNNER_TEMP/install.sh"
           test "$(curl -sS -o /dev/null -w '%{http_code}' \
@@ -45,6 +47,14 @@ jobs:
           test "$("$AGENTCTL_INSTALL_DIR/agentctl" version)" = "agentctl ${expected_version}"
           test "$(readlink "$AGENTCTL_LIB_DIR/current")" = "$expected_version"
           test -z "$(find "$AGENTCTL_LIB_DIR/$expected_version" -name '.current-*' -print -quit)"
+          "$AGENTCTL_INSTALL_DIR/agentctl" self update --yes --json \
+            > "$RUNNER_TEMP/self-update-receipt.json"
+          node -e '
+            const receipt = require(process.env.RUNNER_TEMP + "/self-update-receipt.json");
+            const expected = require("./package.json").version;
+            if (receipt.schemaVersion !== "agentctl.self-receipt/v1alpha1") process.exit(1);
+            if (receipt.afterVersion !== expected) process.exit(1);
+          '
           "$AGENTCTL_INSTALL_DIR/agentctl" inspect \
             --home test/fixtures/home \
             --json > "$RUNNER_TEMP/report.json"
@@ -53,3 +63,41 @@ jobs:
             if (report.schemaVersion !== "agentctl.inspect/v1alpha1") process.exit(1);
             if (report.summary.potentialSecretFields !== 2) process.exit(1);
           '
+          canonical_root="$RUNNER_TEMP/canonical-agent-root"
+          "$AGENTCTL_INSTALL_DIR/agentctl" init "$canonical_root" --no-git --json \
+            > "$RUNNER_TEMP/init.json"
+          "$AGENTCTL_INSTALL_DIR/agentctl" agents list --json \
+            > "$RUNNER_TEMP/catalog.json"
+          "$AGENTCTL_INSTALL_DIR/agentctl" agents status \
+            --root "$canonical_root" \
+            --home "$RUNNER_TEMP/isolated-home" \
+            --json > "$RUNNER_TEMP/tool-status.json"
+          node -e '
+            const fs = require("node:fs");
+            const root = process.env.RUNNER_TEMP;
+            const initialized = JSON.parse(fs.readFileSync(root + "/init.json"));
+            const catalog = JSON.parse(fs.readFileSync(root + "/catalog.json"));
+            const status = JSON.parse(fs.readFileSync(root + "/tool-status.json"));
+            if (!initialized.target.endsWith("/canonical-agent-root")) process.exit(1);
+            if (catalog.schemaVersion !== "agentctl.tool-catalog/v1alpha1") process.exit(1);
+            if (catalog.tools.length !== 7) process.exit(1);
+            if (status.schemaVersion !== "agentctl.tool-status/v1alpha1") process.exit(1);
+          '
+          "$AGENTCTL_INSTALL_DIR/agentctl" self update --dry-run --json \
+            > "$RUNNER_TEMP/self-plan.json"
+          node -e '
+            const plan = require(process.env.RUNNER_TEMP + "/self-plan.json");
+            if (plan.plan.schemaVersion !== "agentctl.self-plan/v1alpha1") process.exit(1);
+            if (plan.applied !== false) process.exit(1);
+          '
+          printf 'preserve\n' > "$canonical_root/preserve-after-self-uninstall"
+          "$AGENTCTL_INSTALL_DIR/agentctl" self uninstall --yes --json \
+            --root "$canonical_root" > "$RUNNER_TEMP/self-uninstall-receipt.json"
+          node -e '
+            const receipt = require(process.env.RUNNER_TEMP + "/self-uninstall-receipt.json");
+            if (receipt.schemaVersion !== "agentctl.self-receipt/v1alpha1") process.exit(1);
+            if (receipt.operation !== "uninstall") process.exit(1);
+          '
+          test ! -e "$AGENTCTL_INSTALL_DIR/agentctl"
+          test ! -e "$AGENTCTL_LIB_DIR"
+          test "$(cat "$canonical_root/preserve-after-self-uninstall")" = "preserve"

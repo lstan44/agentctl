@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentctl.justrepl.com/schemas/tool-status.schema.json",
+  "title": "agentctl tool status report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "agentctlVersion",
+    "mode",
+    "root",
+    "summary",
+    "tools"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "agentctl.tool-status/v1alpha1" },
+    "agentctlVersion": { "type": "string" },
+    "mode": { "const": "version-probe" },
+    "root": { "type": "string" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalogTools", "installed", "desired", "drifted"],
+      "properties": {
+        "catalogTools": { "type": "integer", "minimum": 0 },
+        "installed": { "type": "integer", "minimum": 0 },
+        "desired": { "type": "integer", "minimum": 0 },
+        "drifted": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/toolStatus" }
+    }
+  },
+  "$defs": {
+    "desired": {
+      "type": "object",
+      "required": ["enabled", "channel", "version"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "channel": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "toolStatus": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "command",
+        "installed",
+        "version",
+        "versionError",
+        "executablePath",
+        "realPath",
+        "channel",
+        "channelSource",
+        "managedByAgentctl",
+        "desired",
+        "drift",
+        "sourceUrl"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "command": { "type": "string" },
+        "installed": { "type": "boolean" },
+        "version": { "type": ["string", "null"] },
+        "versionError": { "type": ["string", "null"] },
+        "executablePath": { "type": ["string", "null"] },
+        "realPath": { "type": ["string", "null"] },
+        "channel": { "type": ["string", "null"] },
+        "channelSource": { "type": ["string", "null"] },
+        "managedByAgentctl": { "type": "boolean" },
+        "desired": { "$ref": "#/$defs/desired" },
+        "drift": { "enum": ["aligned", "missing", "unmanaged"] },
+        "sourceUrl": { "type": "string", "format": "uri" }
+      }
+    }
+  }
+}

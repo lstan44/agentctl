@@ -4,12 +4,12 @@
 
 For high-agency AI engineers whose working capability is distributed across
 several agent tools, make the hidden environment legible and give them a
-credible, low-risk path to install the read-only inspector.
+credible, low-risk path to initialize canonical source and provision the stack.
 
 The primary observable outcome is a successful journey from landing page to
-verified local `agentctl inspect` output. The business purpose is to establish
-agentctl as an open-source justREPL project and attract technically serious
-users and contributors.
+verified local `agentctl init`, `agents status`, and `inspect` output. The
+business purpose is to establish agentctl as an open-source justREPL project
+and attract technically serious users and contributors.
 
 ## Scope
 
@@ -22,12 +22,12 @@ marketplace.
 
 1. Product identity and present release status.
 2. Installation command.
-3. Inspection report and its findings.
-4. Supported target environments.
-5. Truth model.
-6. Safety properties.
-7. Open-source repository.
-8. justREPL provenance.
+3. Canonical Git-backed root.
+4. Agent-tool desired and observed state.
+5. Inspection report and findings.
+6. Supported tools and target environments.
+7. Truth model and lifecycle safety.
+8. Open-source repository and justREPL provenance.
 
 The installation command is the primary action. Reading documentation and
 opening GitHub are secondary actions. No destructive action exists on the site.
@@ -38,9 +38,9 @@ opening GitHub are secondary actions. No destructive action exists on the site.
 2. Inspect the exact installation command and its consequences.
 3. Copy it with keyboard, pointer, or manual text selection.
 4. Run the command locally.
-5. Run `agentctl inspect`.
-6. Interpret the report or open the docs/security model.
-7. Inspect source or contribute on GitHub.
+5. Run `agentctl init`, review, and optionally push the root to GitHub.
+6. Run `agentctl agents status` and preview any lifecycle work.
+7. Run `agentctl inspect`, inspect source, or contribute on GitHub.
 
 Copy success is announced in a persistent-enough inline status, not only a
 transient toast. Without JavaScript, the command remains selectable and usable.
@@ -87,7 +87,8 @@ The focal path is promise → install → observed output → architecture → t
 ## Trust and content
 
 - No fake metrics, customers, stars, testimonials, or security claims.
-- “Read-only” describes `inspect` and `doctor`, not all future commands.
+- “Read-only” describes `inspect` and `doctor`; “version probes only” describes
+  `agents status`; lifecycle writes are plan-first and explicitly confirmed.
 - Planned features are labeled as roadmap.
 - The curl command links to a human-readable installer source and security page.
 - No analytics, cookies, remote fonts, or third-party runtime scripts.

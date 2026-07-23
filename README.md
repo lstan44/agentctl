@@ -1,77 +1,164 @@
 # agentctl
 
-**Know what controls your agents.**
+**One control plane for the tools and configuration that power your agents.**
 
-`agentctl` is the open-source, local-first control plane for AI agent
-environments. Its first release inventories the skills, guidance, agents,
-commands, hooks, MCP configuration, executable surfaces, duplication, and
-possible secret-bearing fields spread across your coding agents—without changing
-a file.
+`agentctl` is an open-source, local-first Agent Environment as Code control
+plane. It inventories what controls your coding agents, initializes a canonical
+Git-backed environment, and safely plans and manages the CLI lifecycle for
+Codex, Claude Code, OpenCode, Gemini CLI, GitHub Copilot CLI, OpenClaw, and
+Hermes Agent. It can also update or uninstall its own managed release.
 
 Developed by [justREPL](https://justrepl.com).
 
-## Install
+## Install agentctl
 
 ```sh
 curl -fsSL https://agentctl.justrepl.com/install.sh | bash
 ```
 
-The installer:
+The installer supports macOS and Linux, requires Node.js 20 or newer, installs
+into `~/.local` without `sudo`, verifies the GitHub release archive SHA-256, and
+does not edit shell startup files or agent configuration.
 
-- supports macOS and Linux;
-- installs into `~/.local` by default without `sudo`;
-- downloads a versioned release from GitHub;
-- verifies its SHA-256 checksum before activation;
-- requires Node.js 20 or newer;
-- never modifies an agent configuration.
+## Establish your canonical agent root
 
-Then inspect your environment:
+```sh
+agentctl init
+```
+
+This initializes `~/.agentctl` (or `AGENTCTL_ROOT`) and, when Git is available,
+runs `git init -b main`. It never creates a commit or remote for you. To use
+another directory:
+
+```sh
+agentctl init ~/src/my-agent-environment
+agentctl init --no-git
+agentctl root
+```
+
+The generated repository separates:
+
+- version-controlled desired state in `agentctl.yaml`, `catalog/`, and
+  `targets/`;
+- ignored machine observations and operation receipts under
+  `.agentctl/state/`;
+- agent-owned credentials and configuration, which remain outside the
+  repository.
+
+Review the files, commit them, create a private or public GitHub repository, and
+push:
+
+```sh
+cd ~/.agentctl
+git add .
+git commit -m "Initialize canonical agent environment"
+git remote add origin git@github.com:YOUR-USER/YOUR-AGENT-ENV.git
+git push -u origin main
+```
+
+## Inspect and manage agentic tools
+
+```sh
+agentctl agents list
+agentctl agents status
+
+agentctl agents install codex --dry-run
+agentctl agents install codex --yes
+agentctl agents update codex --yes
+agentctl agents uninstall codex --yes
+```
+
+Lifecycle commands always show an exact plan and require `--yes`; `--dry-run`
+never changes desired or machine state. Existing Homebrew, npm, and supported
+native installations are detected from executable provenance. Uninstall
+operations preserve agent-owned configuration and credentials.
+
+The supported v0.2 catalog is:
+
+| Tool | Default | Alternatives |
+| --- | --- | --- |
+| OpenAI Codex CLI | npm | Homebrew cask |
+| Claude Code | Anthropic native installer | npm, Homebrew cask |
+| OpenCode | npm | Homebrew formula, native installer |
+| Gemini CLI | npm | Homebrew formula |
+| GitHub Copilot CLI | npm | Homebrew cask |
+| OpenClaw | npm | — |
+| Hermes Agent | Nous Research native installer | — |
+
+OpenClaw uses its supervised updater so a managed Gateway is coordinated and
+verified. Its uninstall first removes the Gateway service, then the npm package,
+while retaining `~/.openclaw`. Hermes installs without setup or browser
+bootstrap, avoids shell-profile edits, uses its backup-aware updater, and
+preserves `~/.hermes` on uninstall.
+
+## Update or uninstall agentctl
+
+```sh
+agentctl self update --dry-run
+agentctl self update --yes
+agentctl self uninstall --dry-run
+agentctl self uninstall --yes
+```
+
+Self-update downloads the canonical installer, validates its HTTPS origin,
+records the script digest as execution evidence, then relies on the release
+installer's GitHub archive checksum verification. It refuses a replacement
+older than the running version. Self-uninstall removes the managed command and
+version library but explicitly preserves the canonical `~/.agentctl`
+repository and every agent's configuration.
+
+See the [tool lifecycle contract](docs/tool-lifecycle.md) for official sources,
+channel behavior, failure semantics, and safety boundaries.
+
+## Inspect existing agent environments
 
 ```sh
 agentctl inspect
-```
-
-Machine-readable output is a first-class interface:
-
-```sh
 agentctl inspect --json
 agentctl doctor --json
 ```
 
-## What v0.1 does
+`inspect` inventories Codex, Claude Code, Gemini CLI, OpenCode, and Cursor
+configuration roots; finds duplicate and divergent skills; counts script, hook,
+and MCP surfaces; and detects possible secret-bearing key names without
+reporting their values. `inspect` and `doctor` never invoke agent tools, skills,
+scripts, hooks, plugins, or MCP servers and never write into agent roots.
 
-- Detects Codex, Claude Code, Gemini CLI, OpenCode, and Cursor environments.
-- Counts skills, guidance, commands, agents, rules, hooks, and MCP surfaces.
-- Finds byte-identical skills that can share one canonical source.
-- Flags same-name skills whose definitions have diverged.
-- Identifies executable files inside skill packages.
-- Detects possible secret-bearing keys without printing their values.
-- Produces a stable JSON report suitable for agents and CI.
-- Scaffolds an empty Agent Environment as Code repository with `agentctl init`.
-
-`inspect` and `doctor` are read-only. `init` writes only to the new directory
-explicitly supplied by the user and refuses to overwrite existing files.
+`agents status` has a different, narrow contract: it invokes only each
+cataloged tool's documented version query.
 
 ## Commands
 
 ```text
 agentctl inspect [--json] [--home PATH] [--target ID] [--strict]
-agentctl doctor  [--json] [--home PATH]
-agentctl init [DIRECTORY] [--dry-run] [--json]
+agentctl doctor [--json] [--home PATH]
+agentctl init [DIRECTORY] [--dry-run] [--no-git] [--json]
+agentctl root [--root PATH] [--json]
+agentctl agents list [--json]
+agentctl agents status [TOOL] [--root PATH] [--home PATH] [--json]
+agentctl agents install <TOOL|--all> [--channel ID] [--dry-run|--yes]
+agentctl agents update <TOOL|--all> [--channel ID] [--dry-run|--yes]
+agentctl agents uninstall <TOOL> [--channel ID] [--dry-run|--yes]
+agentctl self update [--dry-run|--yes] [--json]
+agentctl self uninstall [--dry-run|--yes] [--json]
 agentctl version [--json]
 agentctl help
 ```
 
-## Why not just sync dotfiles?
+All reports and plans expose versioned JSON contracts. The CLI has no runtime
+dependencies beyond Node.js.
+
+## Truth model
 
 Files can be identical while their meaning differs across agent products.
-`agentctl` models desired, rendered, filesystem, runtime, and behavioral truths
-separately. The roadmap adds target-native compilation, capability-loss
-accounting, atomic apply, rollback, secret references, and conformance evidence
-without flattening every agent into a lowest common denominator.
+`agentctl` keeps desired, rendered, filesystem, runtime, and behavioral truths
+separate. Tool lifecycle adds another explicit boundary: version-controlled
+desired tool state is not silently equated with observed machine installation.
+Failed external operations remain visible as drift.
 
-Read the [product contract](docs/product-contract.md), [design contract](docs/design-contract.md),
-and [security model](SECURITY.md).
+Read the [product contract](docs/product-contract.md),
+[tool lifecycle contract](docs/tool-lifecycle.md),
+[design contract](docs/design-contract.md), and [security model](SECURITY.md).
 
 ## Development
 
@@ -79,11 +166,12 @@ and [security model](SECURITY.md).
 npm install
 npm run check
 npm run agentctl -- inspect --home ./test/fixtures/home
+npm run agentctl -- agents list
 npm run dev
 ```
 
-The CLI has no runtime dependencies beyond Node.js. The website is static HTML,
-CSS, and JavaScript deployed as Cloudflare Worker static assets.
+The website is static HTML, CSS, and JavaScript deployed as Cloudflare Worker
+static assets.
 
 ## Contributing
 

@@ -1,6 +1,6 @@
 # agentctl
 
-> agentctl is the open-source, local-first control plane for AI agent environments, developed by justREPL.
+> agentctl is the open-source, local-first control plane for agent engineering environments, developed by justREPL.
 
 - [Canonical site](https://agentctl.justrepl.com/)
 - [Source repository](https://github.com/lstan44/agentctl)
@@ -8,16 +8,17 @@
 
 ## Current release
 
-v0.1 is a read-only inspector. It inventories known Codex, Claude Code, Gemini CLI, OpenCode, and Cursor configuration roots; identifies duplicate and divergent skills; inventories skill script files; and reports potential secret-bearing key names without reporting their values.
+v0.2 initializes a Git-backed canonical root at `~/.agentctl`, inventories existing agent configuration, and safely plans and manages installation, updates, and configuration-preserving uninstall for Codex, Claude Code, OpenCode, Gemini CLI, GitHub Copilot CLI, OpenClaw, and Hermes Agent. It also manages its own verified update and canonical-root-preserving uninstall.
 
-The `inspect` and `doctor` commands never execute target tools, skills, scripts, hooks, plugins, or MCP servers, and never write into agent configuration roots.
+`inspect` and `doctor` never execute target tools or write configuration. `agents status` invokes only documented version queries. Lifecycle mutations expose exact static plans, require `--yes`, preserve agent-owned configuration, and record success only after verification.
 
 ## Documentation
 
 - [Getting started](https://agentctl.justrepl.com/docs/)
 - [Security model](https://agentctl.justrepl.com/security/)
 - [Installer source](https://agentctl.justrepl.com/install.sh)
-- [JSON schema](https://github.com/lstan44/agentctl/blob/main/spec/schemas/inspect-report.schema.json)
+- [Tool lifecycle contract](https://github.com/lstan44/agentctl/blob/main/docs/tool-lifecycle.md)
+- [JSON schemas](https://github.com/lstan44/agentctl/tree/main/spec/schemas)
 
 ## Install
 
@@ -25,8 +26,11 @@ The `inspect` and `doctor` commands never execute target tools, skills, scripts,
 curl -fsSL https://agentctl.justrepl.com/install.sh | bash
 ```
 
-Then run:
+Then initialize and inspect:
 
 ```sh
+agentctl init
+agentctl agents status
 agentctl inspect
+agentctl self update --dry-run
 ```

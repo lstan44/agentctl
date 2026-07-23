@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#171714">
-    <meta name="description" content="Install agentctl and run your first read-only agent environment inspection.">
+    <meta name="description" content="Install agentctl, initialize a Git-backed canonical agent root, inspect your environment, and safely manage Codex, Claude Code, OpenCode, Gemini CLI, Copilot CLI, OpenClaw, and Hermes.">
     <link rel="canonical" href="https://agentctl.justrepl.com/docs/">
     <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/styles.css">
@@ -31,106 +31,164 @@
         <p>Documentation</p>
         <nav>
           <a href="#install">Install</a>
+          <a href="#init">Canonical root</a>
+          <a href="#github">GitHub</a>
+          <a href="#tools">Agent tools</a>
+          <a href="#lifecycle">Lifecycle</a>
+          <a href="#self">Self lifecycle</a>
           <a href="#inspect">Inspect</a>
-          <a href="#read-report">Read the report</a>
           <a href="#json">JSON and CI</a>
-          <a href="#doctor">Doctor</a>
-          <a href="#init">Initialize</a>
-          <a href="#uninstall">Uninstall</a>
-          <a href="#boundaries">v0.1 boundaries</a>
+          <a href="#recover">Recover</a>
+          <a href="#boundaries">Boundaries</a>
         </nav>
       </aside>
       <article class="docs-content">
         <header class="docs-hero">
-          <p class="eyebrow">Get started</p>
-          <h1>Inspect before you manage.</h1>
-          <p>From install to a complete local report in about one minute. The first two commands are read-only.</p>
+          <p class="eyebrow">Get started · v0.2</p>
+          <h1>Own your agent environment.</h1>
+          <p>Install one local control plane, establish one Git-backed source of truth, then inspect and safely provision the tools on every machine.</p>
         </header>
 
-        <section id="install">
+        <section id="install" data-copy-scope>
           <p class="docs-step">01 / Install</p>
           <h2>Install agentctl</h2>
-          <p>The installer supports macOS and Linux, requires Node.js 20 or newer, installs without <code>sudo</code>, and verifies the downloaded release checksum.</p>
-          <div class="docs-command" data-copy-scope>
+          <p>The installer supports macOS and Linux, requires Node.js 20 or newer, installs without <code>sudo</code>, and verifies the downloaded GitHub release archive checksum.</p>
+          <div class="docs-command">
             <code data-copy-value>curl -fsSL https://agentctl.justrepl.com/install.sh | bash</code>
             <button type="button" data-copy-button aria-describedby="docs-copy-status"><span data-copy-label>Copy</span></button>
           </div>
           <p id="docs-copy-status" class="copy-status" data-copy-status aria-live="polite">Review the <a href="/install.sh">installer source</a> before running it.</p>
           <div class="callout">
             <strong>PATH recovery</strong>
-            <p>If <code>~/.local/bin</code> is not on your PATH, the installer prints the exact export line to add. It does not edit shell startup files.</p>
+            <p>If <code>~/.local/bin</code> is not on PATH, the installer prints the exact export line. It does not edit shell startup files.</p>
           </div>
         </section>
 
-        <section id="inspect">
-          <p class="docs-step">02 / Observe</p>
-          <h2>Run a read-only inspection</h2>
-          <pre><code>agentctl inspect</code></pre>
-          <p>agentctl reads known configuration roots, hashes <code>SKILL.md</code> definitions, inventories skill script directories, and inspects configuration key names. It does not execute any target CLI, plugin, hook, skill, or script.</p>
-          <h3>Inspect one target</h3>
-          <pre><code>agentctl inspect --target codex
-agentctl inspect --target claude</code></pre>
-          <h3>Inspect a fixture or alternate home</h3>
-          <pre><code>agentctl inspect --home /path/to/home</code></pre>
+        <section id="init">
+          <p class="docs-step">02 / Canonicalize</p>
+          <h2>Initialize the canonical root</h2>
+          <pre><code>agentctl init
+agentctl root</code></pre>
+          <p>By default, <code>init</code> creates <code>~/.agentctl</code> and initializes a Git repository on <code>main</code> when Git is available. It creates no commit, remote, account, or network request.</p>
+          <p>Use an explicit root or disable Git initialization when needed:</p>
+          <pre><code>agentctl init ~/src/my-agent-environment
+agentctl init --no-git
+AGENTCTL_ROOT=~/src/my-agent-environment agentctl root</code></pre>
+          <p>The command is idempotent for an already-valid canonical root and refuses an unrelated non-empty directory. Preview all scaffolded paths with <code>agentctl init --dry-run --json</code>.</p>
+          <dl class="definition-ledger">
+            <div><dt>Versioned</dt><dd><code>agentctl.yaml</code>, <code>catalog/tools.json</code>, shared guidance, skills, and target intent.</dd></div>
+            <div><dt>Ignored</dt><dd><code>.agentctl/state/</code> machine observations and verified operation receipts.</dd></div>
+            <div><dt>External</dt><dd>Agent credentials, sessions, caches, and provider-owned configuration.</dd></div>
+          </dl>
         </section>
 
-        <section id="read-report">
-          <p class="docs-step">03 / Interpret</p>
-          <h2>Read the report</h2>
+        <section id="github">
+          <p class="docs-step">03 / Version</p>
+          <h2>Push your environment to GitHub</h2>
+          <p>Review the generated files first. Choose a private repository if your guidance or topology should not be public.</p>
+          <pre><code>cd ~/.agentctl
+git add .
+git commit -m "Initialize canonical agent environment"
+git remote add origin git@github.com:YOUR-USER/YOUR-AGENT-ENV.git
+git push -u origin main</code></pre>
+          <div class="callout">
+            <strong>Never commit credentials</strong>
+            <p>The scaffold excludes agentctl machine state, but you remain responsible for additions. Store secret references—not secret values—in canonical source.</p>
+          </div>
+        </section>
+
+        <section id="tools">
+          <p class="docs-step">04 / Observe</p>
+          <h2>Know which agent tools are present</h2>
+          <pre><code>agentctl agents list
+agentctl agents status
+agentctl agents status claude --json</code></pre>
+          <p><code>list</code> reads the static catalog. <code>status</code> invokes only each selected tool's documented version query, with a timeout, then reports executable provenance, detected channel, desired state, and drift.</p>
+          <p>v0.2 supports OpenAI Codex CLI, Claude Code, OpenCode, Gemini CLI, GitHub Copilot CLI, OpenClaw, and Hermes Agent. Default and alternative npm, Homebrew, and official native channels are documented against their upstream sources in the <a href="https://github.com/lstan44/agentctl/blob/main/docs/tool-lifecycle.md">complete lifecycle contract</a>.</p>
+        </section>
+
+        <section id="lifecycle">
+          <p class="docs-step">05 / Provision</p>
+          <h2>Plan first. Confirm explicitly.</h2>
+          <pre><code>agentctl agents install codex --dry-run
+agentctl agents install codex --yes
+agentctl agents update codex --yes
+agentctl agents uninstall codex --yes</code></pre>
+          <p>Without <code>--yes</code>, a mutation command prints its exact plan and exits with status <code>2</code>. <code>--dry-run</code> exits <code>0</code> and changes nothing. A confirmed operation verifies package-manager and runtime preconditions, executes a static recipe without shell interpolation, probes the result, and records success only after verification. Batches preflight every tool before the first mutation.</p>
+          <h3>Select a supported channel</h3>
+          <pre><code>agentctl agents install claude --channel native --yes
+agentctl agents install claude --channel npm --yes
+agentctl agents install opencode --channel brew --yes</code></pre>
+          <p>Existing npm, Homebrew, Claude native, OpenCode native, and Hermes native installations are inferred from a matching receipt or executable real path. A stale receipt cannot override the currently observed executable. Unknown uninstall ownership fails closed unless you name a channel; updates may use an upstream's documented self-updater.</p>
+          <h3>Operate across the catalog</h3>
+          <pre><code>agentctl agents install --all --dry-run
+agentctl agents update --all --dry-run</code></pre>
+          <p><code>install --all</code> installs missing catalog tools and updates/adopts already-installed tools so desired truth converges on the complete latest catalog. Bulk uninstall is intentionally unsupported. Remove one named tool at a time.</p>
+          <h3>Configuration survives uninstall</h3>
+          <p>agentctl removes the selected distribution, not your agent identity. Claude's <code>~/.claude</code> is preserved; OpenCode native uses its keep-config and keep-data options; npm and Homebrew remove only their registered package.</p>
+          <h3>OpenClaw and Hermes safeguards</h3>
+          <p>OpenClaw update delegates to its supervised updater; uninstall removes the Gateway service before the npm package and retains <code>~/.openclaw</code>. Hermes installs unprivileged with setup and browser bootstrap skipped, cannot edit shell profiles, retains its pre-update snapshot behavior, and preserves <code>~/.hermes</code> on uninstall.</p>
+        </section>
+
+        <section id="self">
+          <p class="docs-step">06 / Maintain</p>
+          <h2>Update or uninstall agentctl itself</h2>
+          <pre><code>agentctl self update --dry-run
+agentctl self update --yes
+agentctl self uninstall --dry-run
+agentctl self uninstall --yes</code></pre>
+          <p>Self-update downloads the canonical HTTPS installer, validates its origin, records its SHA-256 as execution evidence, then lets the installer verify the versioned GitHub archive checksum before atomic activation. A minimum-version guard rejects downgrades, and the replacement version command must pass before success is reported.</p>
+          <p>Self-uninstall removes the managed command and version library. It rejects paths outside the selected home or any library path that could contain the canonical root. Your <code>~/.agentctl</code> repository and all agent configuration survive.</p>
+        </section>
+
+        <section id="inspect">
+          <p class="docs-step">07 / Audit</p>
+          <h2>Inspect agent configuration without executing it</h2>
+          <pre><code>agentctl inspect
+agentctl inspect --target codex
+agentctl doctor</code></pre>
+          <p><code>inspect</code> reads known configuration roots, hashes <code>SKILL.md</code> definitions, inventories skill script directories, and inspects configuration key names. It does not execute any target CLI, plugin, hook, skill, script, or MCP server. <code>doctor</code> checks the local runtime and remains read-only.</p>
           <dl class="definition-ledger">
-            <div><dt>Inventory</dt><dd>Detected roots and counts for skills, agents, commands, rules, guidance, config files, scripts, hooks, and MCP surfaces.</dd></div>
             <div><dt>Duplicate group</dt><dd>Two or more skills with the same SHA-256 digest for their <code>SKILL.md</code> content.</dd></div>
-            <div><dt>Divergent name</dt><dd>The same skill directory name resolves to different <code>SKILL.md</code> digests across targets.</dd></div>
-            <div><dt>Potential secret field</dt><dd>A key name resembles a credential-bearing field. Only the key and line number enter the report; the value does not.</dd></div>
-            <div><dt>Script surface</dt><dd>A regular file exists under a skill's <code>scripts/</code> directory. Presence is not proof that it ran.</dd></div>
+            <div><dt>Divergent name</dt><dd>The same skill directory name resolves to different definitions across targets.</dd></div>
+            <div><dt>Potential secret field</dt><dd>A key resembles a credential field. Only key and line number enter the report; the value does not.</dd></div>
+            <div><dt>Script surface</dt><dd>A regular file exists under a skill's <code>scripts/</code> directory. Presence is not proof it ran.</dd></div>
           </dl>
         </section>
 
         <section id="json">
-          <p class="docs-step">04 / Automate</p>
-          <h2>Use stable JSON</h2>
-          <pre><code>agentctl inspect --json &gt; agent-environment-report.json</code></pre>
-          <p>JSON output contains no ANSI formatting and is versioned as <code>agentctl.inspect/v1alpha1</code>. The schema is published in the repository.</p>
-          <h3>Fail a policy check on potential secrets</h3>
-          <pre><code>agentctl inspect --strict --json</code></pre>
-          <p><code>--strict</code> exits with status <code>5</code> when potential secret-bearing fields are found. A successful inspection with ordinary informational findings exits <code>0</code>.</p>
+          <p class="docs-step">08 / Automate</p>
+          <h2>Use versioned JSON contracts</h2>
+          <pre><code>agentctl inspect --json &gt; environment.json
+agentctl agents status --json &gt; tools.json
+agentctl agents install gemini --dry-run --json &gt; plan.json</code></pre>
+          <p>JSON output contains no ANSI formatting. Inspect, desired-tool, catalog, tool plan/receipt, and self plan/receipt schemas are published under <a href="https://github.com/lstan44/agentctl/tree/main/spec/schemas"><code>spec/schemas</code></a>.</p>
+          <p><code>agentctl inspect --strict --json</code> exits <code>5</code> when potential secret-bearing fields are found. A mutation awaiting confirmation exits <code>2</code>.</p>
         </section>
 
-        <section id="doctor">
-          <p class="docs-step">05 / Diagnose</p>
-          <h2>Check the local runtime</h2>
-          <pre><code>agentctl doctor
-agentctl doctor --json</code></pre>
-          <p>Doctor checks the Node.js version, platform, home readability, Git availability, and target roots. It remains read-only.</p>
-        </section>
-
-        <section id="init">
-          <p class="docs-step">06 / Opt in</p>
-          <h2>Initialize canonical source</h2>
-          <pre><code>agentctl init ./my-agent-environment --dry-run
-agentctl init ./my-agent-environment</code></pre>
-          <p><code>init</code> is an explicit write command. It creates a new Agent Environment as Code repository and refuses to overwrite a non-empty directory. Target-native rendering is not part of v0.1.</p>
-        </section>
-
-        <section id="uninstall">
-          <p class="docs-step">07 / Recover</p>
-          <h2>Uninstall cleanly</h2>
-          <p>The installer adds only a versioned directory and one command symlink. It never modifies agent configuration or shell startup files.</p>
-          <pre><code>rm "$HOME/.local/bin/agentctl"
+        <section id="recover">
+          <p class="docs-step">09 / Recover</p>
+          <h2>Failure is visible, not ambiguous</h2>
+          <p>Desired truth is written before an approved external lifecycle operation. If that operation fails, no success receipt is written; the next status report exposes desired-versus-observed drift. Fix the precondition and retry the operation.</p>
+          <p>Use the guarded self-uninstaller. The equivalent manual recovery is shown only for a broken CLI:</p>
+          <pre><code>agentctl self uninstall --yes
+# Manual fallback:
+rm "$HOME/.local/bin/agentctl"
 rm -r "$HOME/.local/share/agentctl"</code></pre>
-          <p>If you used <code>AGENTCTL_INSTALL_DIR</code> or <code>AGENTCTL_LIB_DIR</code>, remove the corresponding explicit paths instead.</p>
+          <p>This does not remove your canonical <code>~/.agentctl</code> repository or any agent configuration.</p>
         </section>
 
         <section id="boundaries">
           <p class="docs-step">Release boundary</p>
-          <h2>What v0.1 does not claim</h2>
+          <h2>What v0.2 does not claim</h2>
           <ul class="docs-list">
             <li>Filesystem presence does not prove a target loaded a resource.</li>
             <li>Matching files do not prove equivalent behavior across models.</li>
-            <li>Key-name detection does not prove a value is a valid credential.</li>
-            <li>agentctl does not yet import, render, apply, reconcile, or roll back target configuration.</li>
+            <li>Tool installation does not authenticate the tool to its provider.</li>
+            <li>A recorded native-installer hash is evidence, not an independent signature.</li>
+            <li>agentctl does not yet import, render, reconcile, or roll back target configuration.</li>
           </ul>
-          <p>These are explicit roadmap capabilities, not implied current behavior. Follow development on <a href="https://github.com/lstan44/agentctl">GitHub</a>.</p>
+          <p>These are explicit roadmap capabilities. Follow development on <a href="https://github.com/lstan44/agentctl">GitHub</a>.</p>
         </section>
       </article>
     </main>

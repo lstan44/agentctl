@@ -3,13 +3,16 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 import { getTargetDefinitions } from "./targets.mjs";
+import { isInitializedRoot, resolveAgentRoot } from "./root.mjs";
 import { VERSION } from "./version.mjs";
 
-function commandAvailable(command) {
+function commandAvailable(command, env) {
   const result = spawnSync(command, ["--version"], {
     encoding: "utf8",
     stdio: "ignore",
     timeout: 2_000,
+    env,
+    shell: false,
   });
   return !result.error && result.status === 0;
 }
@@ -35,7 +38,7 @@ export function runDoctor({
   checks.push({
     id: "platform",
     status: ["darwin", "linux"].includes(platform) ? "pass" : "warn",
-    detail: `${platform}; v0.1 is release-tested on macOS and Linux.`,
+    detail: `${platform}; v0.2 is release-tested on macOS and Linux.`,
     recovery: ["darwin", "linux"].includes(platform)
       ? null
       : "Use --json and report compatibility findings on GitHub.",
@@ -56,15 +59,27 @@ export function runDoctor({
     recovery: homeRecovery,
   });
 
+  const gitAvailable = commandAvailable("git", env);
   checks.push({
     id: "git",
-    status: commandAvailable("git") ? "pass" : "warn",
-    detail: commandAvailable("git")
+    status: gitAvailable ? "pass" : "warn",
+    detail: gitAvailable
       ? "Git is available for version-controlled environment sources."
       : "Git was not found on PATH.",
-    recovery: commandAvailable("git")
+    recovery: gitAvailable
       ? null
       : "Install Git before initializing a canonical repository.",
+  });
+
+  const root = resolveAgentRoot({ home: selectedHome, env });
+  const rootInitialized = isInitializedRoot(root);
+  checks.push({
+    id: "canonical-root",
+    status: rootInitialized ? "pass" : "warn",
+    detail: rootInitialized
+      ? `Canonical root is initialized at ${root}.`
+      : `Canonical root is not initialized at ${root}.`,
+    recovery: rootInitialized ? null : "Run `agentctl init` to create it.",
   });
 
   const targets = getTargetDefinitions({ home: selectedHome, env }).map(
@@ -81,6 +96,7 @@ export function runDoctor({
     schemaVersion: "agentctl.doctor/v1alpha1",
     agentctlVersion: VERSION,
     mode: "read-only",
+    root,
     ok: checks.every((check) => check.status !== "fail"),
     checks,
     targets,
