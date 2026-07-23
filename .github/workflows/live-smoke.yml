@@ -1,0 +1,55 @@
+name: Live smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verify public surfaces
+        run: |
+          set -eu
+          expected_version="$(node -p 'require("./package.json").version')"
+          curl -fsS -D "$RUNNER_TEMP/home.headers" \
+            https://agentctl.justrepl.com/ \
+            -o "$RUNNER_TEMP/home.html"
+          curl -fsS -D "$RUNNER_TEMP/install.headers" \
+            https://agentctl.justrepl.com/install.sh \
+            -o "$RUNNER_TEMP/install.sh"
+          grep -F "github.com/lstan44/agentctl" "$RUNNER_TEMP/home.html"
+          grep -F "curl -fsSL https://agentctl.justrepl.com/install.sh | bash" \
+            "$RUNNER_TEMP/home.html"
+          grep -i "^cache-control: no-store" "$RUNNER_TEMP/install.headers"
+          grep -F "AGENTCTL_VERSION:-${expected_version}" "$RUNNER_TEMP/install.sh"
+          test "$(curl -sS -o /dev/null -w '%{http_code}' \
+            https://agentctl.justrepl.com/not-a-real-page)" = "404"
+      - name: Install twice through the canonical command
+        env:
+          AGENTCTL_INSTALL_DIR: ${{ runner.temp }}/agentctl-bin
+          AGENTCTL_LIB_DIR: ${{ runner.temp }}/agentctl-lib
+        run: |
+          set -eu
+          expected_version="$(node -p 'require("./package.json").version')"
+          curl -fsSL https://agentctl.justrepl.com/install.sh | bash
+          curl -fsSL https://agentctl.justrepl.com/install.sh | bash
+          test "$("$AGENTCTL_INSTALL_DIR/agentctl" version)" = "agentctl ${expected_version}"
+          test "$(readlink "$AGENTCTL_LIB_DIR/current")" = "$expected_version"
+          test -z "$(find "$AGENTCTL_LIB_DIR/$expected_version" -name '.current-*' -print -quit)"
+          "$AGENTCTL_INSTALL_DIR/agentctl" inspect \
+            --home test/fixtures/home \
+            --json > "$RUNNER_TEMP/report.json"
+          node -e '
+            const report = require(process.env.RUNNER_TEMP + "/report.json");
+            if (report.schemaVersion !== "agentctl.inspect/v1alpha1") process.exit(1);
+            if (report.summary.potentialSecretFields !== 2) process.exit(1);
+          '
